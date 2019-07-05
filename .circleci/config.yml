@@ -1,0 +1,52 @@
+version: 2
+jobs:
+  build:
+    branches:
+      ignore:
+        - gh-pages
+    environment:
+      - DEBIAN_FRONTEND: noninteractive
+      - GH_EMAIL: masmoof@gmail.com # replace with your e-mail
+      - GH_NAME: mfly               # replace with your github username
+      - SOURCE_BRANCH: master       # only deploy from this branch
+      - TARGET_BRANCH: gh-pages     # store PDF in this branch
+      - OUT_FILENAME: cv.pdf        # compiled PDF name
+    docker:
+      - image: texlive/texlive-full
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "dd:35:72:d2:4c:d4:c6:cf:ba:7a:d4:41:19:68:9d:df" # replace with key fingerprint from CircleCI settings
+      - checkout
+      - run:
+          name: Compile LaTeX
+          command: latexmk -pdf k-cv.tex
+      - store_artifacts:
+          path: k-cv.pdf
+      - run:
+          name: Install dependencies
+          command: |
+            sed '/jessie-updates/s/^/# /' -i /etc/apt/sources.list
+            apt update && apt install -y git
+      - deploy:
+          name: Deploy
+          command: |
+            if [ $CIRCLE_BRANCH == $SOURCE_BRANCH ]
+            then
+              ssh-keyscan -Ht rsa github.com >> ~/.ssh/known_hosts
+              git config --global user.email $GH_EMAIL
+              git config --global user.name $GH_NAME
+
+              git clone $CIRCLE_REPOSITORY_URL out
+
+              cd out
+              git checkout $TARGET_BRANCH || git checkout --orphan $TARGET_BRANCH
+              git rm -rf .
+              cp ../k-cv.pdf $OUT_FILENAME
+              cp -r ../.circleci .
+
+              git add -A
+              git commit -m "Automated deployment to GitHub Pages: ${CIRCLE_SHA1}" --allow-empty
+
+              git push origin $TARGET_BRANCH
+            fi
