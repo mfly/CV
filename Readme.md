@@ -1,9 +1,21 @@
 # About
-A new version of the famous Friggeri CV. My much simpler version now works without external font files, with regular (pdf)latex and without biber.
+Modern and clean CV that uses CircleCI to build itself and publish to GitHub pages.
 
+# Setup
+1. Fork this repo.
+2. Generate SSH key pair `ssh-keygen -m PEM -t rsa -C "your@email.com" -f /tmp/deploy_key -q -N ""`.
+3. Go to repo settings on GitHub:
+    - Go to `Deploy keys` and add the newly created public key (`cat /tmp/deploy\_key.pub`). Be sure to check the `Allow write access` checkbox.
+4. Log-in to CircleCI:
+    - In `ADD PROJECTS` tab select your repo and enable builds.
+    - Go to project settings, `SSH Permisions` and add the private key (`cat /tmp/deploy\_key`) and set the `Hostname` to `github.com`, take note of the fingerprint.
+6. Update settings in `.circleci/config.yml`.
+7. Push the changes.
+9. Each time you push to the master branch your compiled CV will be pushed to gh-pages branch and be avilable at https://username.github.io/CV/cv.pdf.
 
 # License
 
+Copyright (C) 2019, Maciej Mucha  
 Copyright (C) 2015, Edgar Klenske  
 Copyright (C) 2014, Jelmer Tiete  
 Copyright (C) 2012, Adrien Friggeri
